@@ -18,6 +18,7 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
+import no.hvl.dat110.chordoperations.ChordLookup;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -80,24 +81,26 @@ public class FileManager {
     	int index = rnd.nextInt(Util.numReplicas-1);
     	
     	int counter = 0;
-	
+
     	// Task1: Given a filename, make replicas and distribute them to all active peers such that: pred < replica <= peer
-    	
+
     	// Task2: assign a replica as the primary for this file. Hint, see the slide (project 3) on Canvas
-    	
+
     	// create replicas of the filename
-    	
+		createReplicaFiles();
 		// iterate over the replicas
-    	
-    	// for each replica, find its successor (peer/node) by performing findSuccessor(replica)
-    	
-    	// call the addKey on the successor and add the replica
-		
-		// implement a logic to decide if this successor should be assigned as the primary for the file
-    	
-    	// call the saveFileContent() on the successor and set isPrimary=true if logic above is true otherwise set isPrimary=false
-    	
-    	// increment counter
+        for (BigInteger replicaFile : replicafiles) {
+            // for each replica, find its successor (peer/node) by performing findSuccessor
+			NodeInterface succ = chordnode.findSuccessor(replicaFile);
+			// call the addKey on the successor and add the replica
+			succ.addKey(replicaFile);
+			// implement a logic to decide if this successor should be assigned as the primary for the file
+			// call the saveFileContent() on the successor and set isPrimary=true if logic above is true otherwise set isPrimary=false
+            succ.saveFileContent(filename, replicaFile, bytesOfFile, counter == index);
+			// increment counter
+			counter++;
+        }
+
 		return counter;
     }
 	
@@ -113,17 +116,17 @@ public class FileManager {
 		activeNodesforFile = new HashSet<Message>(); 
 
 		// Task: Given a filename, find all the peers that hold a copy of this file
-		
+
 		// generate the N replicas from the filename by calling createReplicaFiles()
-		
+		createReplicaFiles();
 		// iterate over the replicas of the file
-		
-		// for each replica, do findSuccessor(replica) that returns successor s.
-		
-		// get the metadata (Message) of the replica from the successor (i.e., active peer) of the file
-		
-		// save the metadata in the set activeNodesforFile.
-		
+		for(BigInteger replica : replicafiles){
+			// for each replica, do findSuccessor(replica) that returns successor s.
+			NodeInterface succ = chordnode.findSuccessor(replica);
+			// get the metadata (Message) of the replica from the successor (i.e., active peer) of the file
+			// save the metadata in the set activeNodesforFile.
+			activeNodesforFile.add(succ.getFilesMetadata(replica));
+		}
 		return activeNodesforFile;
 	}
 	
